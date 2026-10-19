@@ -1,0 +1,30 @@
+Vivado simulator (xsim) v2023.2, Windows: sim\run.bat (N=8, 10000 images, SVA enabled)
+
+==== TinyNPU system test: N = 8 (8x8 array), 10000 images ====
+   1000 images done, accuracy so far 97.80%, mismatches 0
+   2000 images done, accuracy so far 97.25%, mismatches 0
+   3000 images done, accuracy so far 97.07%, mismatches 0
+   4000 images done, accuracy so far 97.17%, mismatches 0
+   5000 images done, accuracy so far 97.26%, mismatches 0
+   6000 images done, accuracy so far 97.47%, mismatches 0
+   7000 images done, accuracy so far 97.57%, mismatches 0
+   8000 images done, accuracy so far 97.83%, mismatches 0
+   9000 images done, accuracy so far 97.96%, mismatches 0
+  10000 images done, accuracy so far 97.98%, mismatches 0
+
+==== Summary ====
+  Array                  : 8 x 8 (64 MAC units)
+  Images                 : 10000
+  Accuracy (vs labels)   : 97.98% (9798 / 10000)
+  Logit mismatches       : 0 (vs bit-exact golden model)
+  Prediction mismatches  : 0
+  Cycles per batch       : 13801.0
+  Cycles per image       : 1725.1
+  Array utilization      : 98.9% (useful MACs / (cycles x 64))
+  Feed efficiency        : 99.2% (cycles the array received data)
+  Throughput @ 100 MHz   : 57967 images/s
+  Assertion failures     : 0
+RESULT N=8 images=10000 correct=9798 logit_mismatch=0 pred_mismatch=0 cycles=17251250 mac_cycles=17120000 batches=1250
+*** TEST PASSED ***
+$finish called at time : 185562755 ns : File "C:/projects/tinynpu/tb/tb_npu.sv" Line 391
+run: Time (s): cpu = 00:00:00 ; elapsed = 00:16:04 . Memory (MB): peak = 198.043 ; gain = 0.000

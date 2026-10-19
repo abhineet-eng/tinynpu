@@ -1,0 +1,14 @@
+TinyNPU implementation summary
+  Array size            : 8 x 8
+  Device                : xc7a35tcpg236-1
+  Clock target          : 10.0 ns (100 MHz)
+  Worst negative slack  : 0.863 ns
+  Maximum clock (Fmax)  : 109.4 MHz
+  LUTs                  : 3150 / 20800
+  Flip-flops            : 6399 / 41600
+  Block RAM tiles       : 36.5 / 50
+  DSP48 slices          : 80 / 90
+  Total on-chip power   : 0.309 W (vectorless estimate at the target clock)
+
+Tool: Vivado 2023.2, out-of-context synth_design + opt + place + phys_opt + route_design (fpga/synth.tcl)
+route_design completed successfully; 0 critical warnings, 0 errors

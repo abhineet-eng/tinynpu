@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="580" viewBox="0 0 1000 580" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>TinyNPU block diagram</title>
+  <desc>Images arrive on AXI4-Stream into an image buffer. A controller streams INT8 weights from a weight ROM into the rows of an N by N systolic array while activations from the image buffer or the hidden-layer buffers enter its columns. Results are rescaled (bias, requantization, ReLU) and written back as the next layer's input, or into the logits buffer for the last layer. An argmax unit produces the predictions, which are read over AXI4-Lite.</desc>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .bg   { fill: #fcfcfb; }
+      .box  { fill: #ffffff; stroke: #c3c2b7; stroke-width: 1.2; }
+      .mem  { fill: #eef4fc; stroke: #86b6ef; stroke-width: 1.2; }
+      .core { fill: #f4f8fd; stroke: #2a78d6; stroke-width: 1.4; }
+      .pe   { fill: #2a78d6; }
+      .ext  { fill: #f0efec; stroke: #c3c2b7; stroke-width: 1.2; }
+      .t    { fill: #0b0b0b; font-size: 14px; font-weight: 600; }
+      .s    { fill: #52514e; font-size: 11.5px; }
+      .m    { fill: #898781; font-size: 11px; }
+      .w    { stroke: #52514e; stroke-width: 1.5; fill: none; }
+      .wb   { stroke: #2a78d6; stroke-width: 1.8; fill: none; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1000" height="580" rx="14"/>
+
+  <!-- accelerator boundary -->
+  <rect x="150" y="30" width="700" height="520" rx="14" fill="none" stroke="#c3c2b7" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <text class="t" x="170" y="56">npu_top</text>
+  <text class="m" x="170" y="538">single clock (aclk), synchronous active-low reset</text>
+
+  <!-- external interfaces -->
+  <rect class="ext" x="14" y="79" width="118" height="58" rx="8"/>
+  <text class="t" x="28" y="103">AXI4-Stream</text>
+  <text class="s" x="28" y="123">images in</text>
+
+  <rect class="ext" x="14" y="431" width="118" height="58" rx="8"/>
+  <text class="t" x="28" y="455">AXI4-Lite</text>
+  <text class="s" x="28" y="475">control, results</text>
+
+  <rect class="ext" x="868" y="486" width="118" height="58" rx="8"/>
+  <text class="t" x="884" y="510">irq</text>
+  <text class="s" x="884" y="530">DONE &amp; IRQ_EN</text>
+
+  <!-- activation sources (top row) -->
+  <rect class="mem" x="390" y="78" width="118" height="60" rx="8"/>
+  <text class="t" x="402" y="101">Image buffer</text>
+  <text class="s" x="402" y="120">784 x N, INT8</text>
+
+  <rect class="mem" x="522" y="78" width="118" height="60" rx="8"/>
+  <text class="t" x="534" y="101">H1 / H2</text>
+  <text class="s" x="534" y="120">128 / 64 x N</text>
+
+  <path class="w" d="M132 108 L386 108" marker-end="url(#ar)"/>
+  <text class="m" x="200" y="100">pixel &gt;&gt; 1 = INT8</text>
+
+  <path class="wb" d="M449 138 L449 166" marker-end="url(#ar)"/>
+  <path class="wb" d="M581 138 L581 166" marker-end="url(#ar)"/>
+  <text class="m" x="485" y="157">activations</text>
+
+  <!-- left column -->
+  <rect class="mem" x="180" y="200" width="150" height="70" rx="8"/>
+  <text class="t" x="194" y="224">Weight ROM</text>
+  <text class="s" x="194" y="243">INT8, block RAM</text>
+  <text class="s" x="194" y="260">tiles in use order</text>
+  <path class="wb" d="M330 235 L386 235" marker-end="url(#ar)"/>
+  <text class="m" x="336" y="228">weights</text>
+
+  <rect class="box" x="180" y="290" width="150" height="90" rx="8"/>
+  <text class="t" x="194" y="314">Controller</text>
+  <text class="s" x="194" y="333">layer / tile / k</text>
+  <text class="s" x="194" y="350">back-to-back tiles</text>
+  <text class="s" x="194" y="367">cycle counters</text>
+  <path class="w" d="M330 335 L386 335" marker-end="url(#ar)"/>
+  <text class="m" x="336" y="328">flags</text>
+
+  <rect class="box" x="180" y="420" width="150" height="80" rx="8"/>
+  <text class="t" x="194" y="444">Registers</text>
+  <text class="s" x="194" y="463">CTRL, STATUS</text>
+  <text class="s" x="194" y="480">counters, PRED, logits</text>
+  <path class="w" d="M136 460 L176 460" marker-start="url(#ar)" marker-end="url(#ar)"/>
+
+  <!-- systolic array -->
+  <rect class="core" x="390" y="170" width="250" height="262" rx="10"/>
+  <text class="t" x="406" y="194">Systolic array (N x N)</text>
+  <text class="s" x="406" y="212">INT8 x INT8, INT32 accumulate</text>
+  <g transform="translate(437,226)">
+    <g id="row">
+      <rect class="pe" x="0"   y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="20"  y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="40"  y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="60"  y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="80"  y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="100" y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="120" y="0" width="16" height="16" rx="3"/>
+      <rect class="pe" x="140" y="0" width="16" height="16" rx="3"/>
+    </g>
+    <use href="#row" y="20"/><use href="#row" y="40"/><use href="#row" y="60"/>
+    <use href="#row" y="80"/><use href="#row" y="100"/><use href="#row" y="120"/><use href="#row" y="140"/>
+  </g>
+  <text class="m" x="406" y="402">weights flow east, activations south</text>
+  <text class="m" x="406" y="419">input skew, drain chain, de-skew</text>
+
+  <!-- right column -->
+  <rect class="box" x="680" y="170" width="150" height="104" rx="8"/>
+  <text class="t" x="694" y="194">Rescale x N</text>
+  <text class="s" x="694" y="213">+ bias (INT32)</text>
+  <text class="s" x="694" y="230">x M, round, &gt;&gt;&gt; S</text>
+  <text class="s" x="694" y="247">clamp, ReLU: INT8</text>
+  <text class="m" x="694" y="264">4-stage pipeline</text>
+  <path class="wb" d="M640 222 L676 222" marker-end="url(#ar)"/>
+
+  <rect class="mem" x="680" y="292" width="150" height="50" rx="8"/>
+  <text class="t" x="694" y="314">Bias ROM</text>
+  <text class="s" x="694" y="332">INT32 per neuron</text>
+  <path class="w" d="M755 292 L755 278" marker-end="url(#ar)"/>
+
+  <rect class="mem" x="680" y="360" width="150" height="50" rx="8"/>
+  <text class="t" x="694" y="382">Logits buffer</text>
+  <text class="s" x="694" y="400">10 x N, INT8</text>
+
+  <rect class="box" x="680" y="428" width="150" height="56" rx="8"/>
+  <text class="t" x="694" y="452">Argmax</text>
+  <text class="s" x="694" y="470">N images in parallel</text>
+  <path class="w" d="M755 410 L755 424" marker-end="url(#ar)"/>
+
+  <!-- write-back: layers 1-2 go to H1/H2, layer 3 to the logits buffer -->
+  <path class="wb" d="M830 222 L846 222 L846 62 L581 62 L581 74" marker-end="url(#ar)"/>
+  <text class="m" x="700" y="56">layers 1-2: next layer's input</text>
+  <path class="wb" d="M846 222 L846 385 L834 385" marker-end="url(#ar)"/>
+  <text class="m" x="856" y="300">layer 3</text>
+
+  <!-- results to registers, interrupt out -->
+  <path class="w" d="M680 456 L334 456" marker-end="url(#ar)"/>
+  <text class="m" x="430" y="450">predictions</text>
+  <path class="w" d="M255 500 L255 515 L864 515" marker-end="url(#ar)"/>
+</svg>
