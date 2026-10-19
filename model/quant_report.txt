@@ -1,0 +1,10 @@
+TinyNPU model quantization report
+Network: 784 -> 128 -> 64 -> 10 (ReLU), INT8 weights/activations, INT32 accumulation
+Float32 test accuracy : 97.90%
+INT8    test accuracy : 97.98%  (9798 / 10000 images)
+
+layer  M      S   s_w        s_in       s_out
+    1  27285  26  3.320e-03  7.843e-03  6.405e-02
+    2  20488  23  4.452e-03  6.405e-02  1.167e-01
+    3  24098  23  7.384e-03  1.167e-01  3.001e-01
+largest |accumulator| on the test set: 323,809 (20 bits incl. sign; hardware has 32)
