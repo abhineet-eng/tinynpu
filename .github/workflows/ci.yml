@@ -1,0 +1,75 @@
+name: verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cocotb:
+    name: cocotb tests (Icarus Verilog)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Icarus Verilog and Python packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          pip install cocotb==1.9.2 numpy pytest
+
+      - name: Systolic array, requantization and full-chip tests
+        run: |
+          cd cocotb
+          pytest -v test_runner.py
+
+  system:
+    name: 10,000-image bit-exact simulation (Verilator)
+    runs-on: ubuntu-24.04
+    env:
+      VERILATOR_VERSION: v5.052
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Verilator
+        id: cache-verilator
+        uses: actions/cache@v4
+        with:
+          path: ~/verilator
+          key: verilator-${{ env.VERILATOR_VERSION }}-ubuntu-24.04
+
+      - name: Build Verilator (first run only)
+        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git autoconf flex bison help2man perl python3 make g++ libfl-dev zlib1g-dev
+          git clone --depth 1 --branch "$VERILATOR_VERSION" https://github.com/verilator/verilator.git /tmp/verilator
+          cd /tmp/verilator
+          autoconf
+          ./configure --prefix="$HOME/verilator"
+          make -j"$(nproc)"
+          make install
+
+      - name: Add Verilator to PATH
+        run: echo "$HOME/verilator/bin" >> "$GITHUB_PATH"
+
+      - name: Lint (Verilator -Wall, every array size)
+        run: bash tools/lint.sh
+
+      - name: 8x8 array, all 10,000 MNIST test images
+        run: bash tools/run_verilator.sh 8 10000
+
+      - name: 16x16 array, all 10,000 MNIST test images
+        run: bash tools/run_verilator.sh 16 10000
+
+      - name: 8x8 array with random gaps in the image stream
+        run: bash tools/run_verilator.sh 8 1000 +GAPS
+
+      - name: Assertion self-test (an injected protocol violation must be caught)
+        run: |
+          bash tools/run_verilator.sh 8 16 +SVA_SELFTEST || true
+          grep -q "SVA SELF-TEST PASSED" build/verilator_N8/run.log
