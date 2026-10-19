@@ -1,0 +1,17 @@
+build/
+sim/work_*/
+sim/sweep_results.csv
+fpga/build_*/
+cocotb/sim_build/
+cocotb/results.xml
+__pycache__/
+*.pyc
+*.log
+!docs/results/*.log
+*.jou
+*.str
+*.pb
+*.wdb
+.Xil/
+xsim.dir/
+model/data/train-*
